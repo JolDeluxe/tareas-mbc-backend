@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `usuario` ADD COLUMN `estatus` ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO';
