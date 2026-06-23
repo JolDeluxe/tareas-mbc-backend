@@ -78,7 +78,7 @@ export const obtenerKPIs = safeAsync(async (req: Request, res: Response) => {
       if (puedeAsignarExternas) {
         where.OR = [
           { departamentoId: user.departamentoId! },
-          { asignadorId: user.id }
+          { asignador: { departamentoId: user.departamentoId! } }
         ];
       } else {
         where.departamentoId = user.departamentoId!;

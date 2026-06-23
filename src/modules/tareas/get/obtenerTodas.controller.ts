@@ -151,8 +151,8 @@ export const obtenerTodas = safeAsync(async (req: Request, res: Response) => {
 
   // --- LÓGICA DE PERMISOS POR ROL Y VIEWTYPE ---
   
-  // A. SUPER ADMIN / DEPARTAMENTO DE CALIDAD (Acceso total)
-  if (user.rol === "SUPER_ADMIN" || esDepartamentoCalidad) {
+  // A. SUPER ADMIN (Acceso total)
+  if (user.rol === "SUPER_ADMIN") {
     if (departamentoId) where.departamentoId = departamentoId;
     if (asignadorId) where.asignadorId = asignadorId;
     if (responsableId) {
@@ -189,24 +189,36 @@ export const obtenerTodas = safeAsync(async (req: Request, res: Response) => {
       case "MIS_TAREAS":
         // Solo donde soy responsable, sin importar depto
         andClauses.push({ responsables: { some: { usuarioId: user.id } } });
+        if (departamentoId) {
+          where.departamentoId = departamentoId;
+        }
         break;
 
       case "ASIGNADAS":
         // Todo lo que YO asigné (incluyendo cross-dept si aplica)
         where.asignadorId = user.id;
         agruparPor = 'USUARIO';
-        // Sin restricción de departamentoId cuando es ASIGNADAS
+        if (departamentoId) {
+          if (puedeAsignarExternas || departamentoId === user.departamentoId) {
+            where.departamentoId = departamentoId;
+          } else {
+            where.departamentoId = user.departamentoId;
+          }
+        }
         break;
 
       default: // "TODAS"
-        // 🔹 NUEVA LÓGICA: tareas de mi depto + tareas cross-dept que yo asigné
+        // 🔹 NUEVA LÓGICA: tareas de mi depto + tareas cross-dept que mi departamento asignó
         if (puedeAsignarExternas) {
           andClauses.push({
             OR: [
               { departamentoId: user.departamentoId },
-              { asignadorId: user.id }   // Sus propias tareas externas
+              { asignador: { departamentoId: user.departamentoId } }
             ]
           });
+          if (departamentoId) {
+            where.departamentoId = departamentoId;
+          }
         } else {
           where.departamentoId = user.departamentoId;
         }

@@ -16,15 +16,18 @@ export const obtenerDetalle = safeAsync(async (req: Request, res: Response) => {
 
   if (!tarea) return res.status(404).json({ error: "Tarea no encontrada" });
 
-  // 2. Lógica de Visibilidad (Tu lógica original intacta)
+  // 2. Lógica de Visibilidad
   let puedeVer = false;
 
   if (user.rol === "SUPER_ADMIN") puedeVer = true;
   else if (user.rol === "ADMIN" || user.rol === "ENCARGADO") {
-    if (tarea.departamentoId === user.departamentoId) puedeVer = true;
+    if (tarea.departamentoId === user.departamentoId || tarea.asignador.departamentoId === user.departamentoId) {
+      puedeVer = true;
+    }
   } else {
     const esResponsable = tarea.responsables.some(r => r.usuario.id === user.id);
-    if (esResponsable) puedeVer = true;
+    const esAsignador = tarea.asignadorId === user.id;
+    if (esResponsable || esAsignador) puedeVer = true;
   }
 
   if (!puedeVer) {
