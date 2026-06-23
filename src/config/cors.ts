@@ -7,13 +7,12 @@ dotenv.config();
 // ----------------------------------------------------------------------
 // Aquí ponemos las direcciones EXACTAS que sabemos que son seguras.
 const baseAllowedOrigins = [
-  "https://tareas-calidad-mbc.mbc-bitacoras.me", // Tu dominio de producción (Real)
-  "http://localhost:5173",      // Frontend local (Vite)
-  "http://127.0.0.1:5173",      // Frontend local (IP Loopback)
-  "http://localhost:3000",      // Backend local (para pruebas API)
-  "http://127.0.0.1:3000",      // Backend local (IP Loopback)
-  "http://200.1.0.72:5173",     // Una IP específica de tu red (quizás tu PC en la red)
-  "http://10.0.2.2:5173"        // 🤖 IP especial del Emulador de Android Studio
+  "https://tareas-mbc.netlify.app",              // 🚀 NUEVO: Tu Frontend real en Netlify (SIN BARRA '/')
+  "https://tareas-calidad-mbc.mbc-bitacoras.me", // (Opcional) Dejamos el monolito viejo un mes por seguridad
+  "http://localhost:5173",                       // Frontend local (Vite)
+  "http://127.0.0.1:5173",                       // Frontend local (IP Loopback)
+  "http://localhost:3000",                       // Backend local
+  "http://10.0.2.2:5173"                         // Emulador Android
 ];
 
 // Obtener orígenes adicionales configurados en .env (útil para Netlify en prod)

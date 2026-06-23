@@ -4,8 +4,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 // 1. IMPORTAR CONFIGURACIONES Y MIDDLEWARES
-import { envs } from "./config/envs.js";           
-import { corsConfig } from "./config/cors.js";    
+import { envs } from "./config/envs.js";            
+import { corsConfig } from "./config/cors.js";      
 import { requestLogger } from "./middleware/requestLogger.js"; 
 import { errorHandler } from "./middleware/errorHandler.js";   
 import { iniciarCronJobs } from "./services/cron.service.js";
@@ -26,27 +26,29 @@ const app = express();
 app.use(corsConfig);          // 1. Seguridad CORS
 app.use(requestLogger);       // 2. Logging
 app.use(express.json());      // 3. Parser JSON
-app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // 4. Archivos estáticos
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // 4. Servir imágenes de evidencias
 
-// --- SERVIR FRONTEND (SPA) ---
-const FRONTEND_PATH = path.join(__dirname, "..", "..", "frontend", "dist");
-app.use(express.static(FRONTEND_PATH));
+// --- SALUDO EN LA RAÍZ (API HEADLESS) ---
+app.get("/", (req, res) => {
+  const ahora = new Date();
+  res.status(200).json({
+    ok: true,
+    api: "Gestor de Calidad - MBC",
+    estatus: "ONLINE",
+    motor: "Bun Runtime nativo",
+    puerto: envs.PORT,
+    horaUtc: ahora.toISOString(),
+    horaMexico: ahora.toLocaleString("es-MX", { timeZone: "America/Mexico_City" })
+  });
+});
 
 // --- RUTAS DE API ---
-app.get("/api/health", (req, res) => res.json({ status: "OK" }));
+app.get("/api/health", (req, res) => res.json({ status: "OK", memoria: process.memoryUsage().rss }));
 app.use("/api/auth", authRouter);
 app.use("/api/tareas", tareasRouter);
 app.use("/api/usuarios", usuariosRouter);
 app.use("/api/departamentos", departamentosRouter);
 app.use("/api/logs", logsRouter);
-
-// --- FALLBACK PARA SPA ---
-app.get("*", (req, res, next) => {
-  if (!req.path.startsWith("/api")) {
-      return res.sendFile(path.join(FRONTEND_PATH, "index.html"));
-  }
-  next();
-});
 
 // --- SERVICIOS EN 2do PLANO ---
 iniciarCronJobs(); // <--- Aquí arranca el servicio de auto-validación y notificaciones
@@ -56,5 +58,5 @@ app.use(errorHandler);
 
 // --- INICIO DEL SERVIDOR ---
 app.listen(envs.PORT, "0.0.0.0", () => {
-  console.log(`\n[${new Date().toLocaleString()}] 🚀 SISTEMA LISTO EN PUERTO ${envs.PORT}\n`);
+  console.log(`\n[${new Date().toLocaleString()}] 🚀 CEREBRO API LISTO EN PUERTO ${envs.PORT}\n`);
 });
