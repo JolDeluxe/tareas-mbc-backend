@@ -66,7 +66,9 @@ export const entregarTarea = safeAsync(async (req: Request, res: Response) => {
       where: { id: tareaId },
       data: {
         estatus: "EN_REVISION",
-        fechaEntrega: new Date(), // <--- ESTA ES LA VERDAD OPERATIVA (Se detiene el reloj del usuario)
+        fechaEntrega: req.body.fechaEntrega && !isNaN(Date.parse(req.body.fechaEntrega))
+          ? new Date(req.body.fechaEntrega)
+          : new Date(),
         comentarioEntrega: comentario,
       },
       include: {

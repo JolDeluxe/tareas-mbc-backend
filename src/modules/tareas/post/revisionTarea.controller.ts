@@ -54,8 +54,12 @@ export const revisionTarea = safeAsync(async (req: Request, res: Response) => {
       where: { id: tareaId },
       data: {
         estatus: "CONCLUIDA",
-        fechaConclusion: new Date(), 
-        fechaRevision: new Date(),
+        fechaConclusion: req.body.fechaConclusion && !isNaN(Date.parse(req.body.fechaConclusion))
+          ? new Date(req.body.fechaConclusion)
+          : new Date(), 
+        fechaRevision: req.body.fechaRevision && !isNaN(Date.parse(req.body.fechaRevision))
+          ? new Date(req.body.fechaRevision)
+          : new Date(),
         feedbackRevision: feedback ?? "Aprobada.",
       },
     });
@@ -108,7 +112,9 @@ export const revisionTarea = safeAsync(async (req: Request, res: Response) => {
       data: {
         estatus: "PENDIENTE",
         fechaEntrega: null, // Se anula la entrega porque fue rechazada
-        fechaRevision: new Date(),
+        fechaRevision: req.body.fechaRevision && !isNaN(Date.parse(req.body.fechaRevision))
+          ? new Date(req.body.fechaRevision)
+          : new Date(),
         feedbackRevision: feedback ?? "Se requieren correcciones.",
         // Si hay nueva fecha, la usamos. Si no, se queda la original.
         ...(nuevaFechaLimite && { fechaLimite: new Date(nuevaFechaLimite) }), 

@@ -30,7 +30,12 @@ export const completarTarea = safeAsync(async (req: Request, res: Response) => {
   // Actualizar
   const tareaActualizada = await prisma.tarea.update({
     where: { id: tareaId },
-    data: { estatus: "CONCLUIDA", fechaConclusion: new Date() },
+    data: {
+      estatus: "CONCLUIDA",
+      fechaConclusion: req.body.fechaConclusion && !isNaN(Date.parse(req.body.fechaConclusion))
+        ? new Date(req.body.fechaConclusion)
+        : new Date(),
+    },
     include: tareaConRelacionesInclude,
   });
 
