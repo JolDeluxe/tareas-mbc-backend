@@ -108,7 +108,9 @@ export const actualizarTarea = safeAsync(async (req: Request, res: Response) => 
 
     for (const responsable of usuariosResponsables) {
       let valido = false;
-      if (user.rol === "SUPER_ADMIN") {
+      if (responsable.id === user.id) {
+        valido = true;
+      } else if (user.rol === "SUPER_ADMIN") {
         valido = true;
       } else if (esTareaExterna) {
         // 🔹 TAREA EXTERNA: ADMIN/ENCARGADO pueden asignar a cualquier rol activo del depto destino

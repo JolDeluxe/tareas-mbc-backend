@@ -11,6 +11,8 @@ const baseAllowedOrigins = [
   "https://tareas-calidad-mbc.mbc-bitacoras.me", // (Opcional) Dejamos el monolito viejo un mes por seguridad
   "http://localhost:5173",                       // Frontend local (Vite)
   "http://127.0.0.1:5173",                       // Frontend local (IP Loopback)
+  "http://localhost:5000",                       // Frontend local (Vite preview/serve)
+  "http://127.0.0.1:5000",                       // Frontend local (IP Loopback port 5000)
   "http://localhost:3000",                       // Backend local
   "http://10.0.2.2:5173"                         // Emulador Android
 ];
@@ -64,9 +66,10 @@ export const corsConfig = cors({
         
         // 4. REGLA LAXA DE DESARROLLO (VITE)
         // Permite CUALQUIER IP (incluso desconocida) siempre y cuando 
-        // el puerto sea el 5173 (el de Vite). 
+        // el puerto sea el 5173 (el de Vite) o el 5000 (el de Vite preview). 
         // Útil si pruebas desde tu celular conectado a la red local.
-        origin.includes(":5173");
+        origin.includes(":5173") ||
+        origin.includes(":5000");
 
     // DECISIÓN FINAL
     if (isAllowed) {

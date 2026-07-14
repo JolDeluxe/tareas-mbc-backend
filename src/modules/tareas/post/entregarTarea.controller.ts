@@ -52,6 +52,7 @@ export const entregarTarea = safeAsync(async (req: Request, res: Response) => {
   }
 
   const comentario = req.body.comentarioEntrega || "Tarea marcada como entregada.";
+  const esAutoAprobacion = tarea.asignadorId === user.id;
 
   // 5. Transacción en Base de Datos
   // Aquí ocurre lo importante: FECHA DE ENTREGA = AHORA
@@ -65,11 +66,20 @@ export const entregarTarea = safeAsync(async (req: Request, res: Response) => {
     return await tx.tarea.update({
       where: { id: tareaId },
       data: {
-        estatus: "EN_REVISION",
+        estatus: esAutoAprobacion ? "CONCLUIDA" : "EN_REVISION",
         fechaEntrega: req.body.fechaEntrega && !isNaN(Date.parse(req.body.fechaEntrega))
           ? new Date(req.body.fechaEntrega)
           : new Date(),
         comentarioEntrega: comentario,
+        ...(esAutoAprobacion && {
+          fechaConclusion: req.body.fechaEntrega && !isNaN(Date.parse(req.body.fechaEntrega))
+            ? new Date(req.body.fechaEntrega)
+            : new Date(),
+          fechaRevision: req.body.fechaEntrega && !isNaN(Date.parse(req.body.fechaEntrega))
+            ? new Date(req.body.fechaEntrega)
+            : new Date(),
+          feedbackRevision: "Auto-aprobada por ser asignada a uno mismo.",
+        }),
       },
       include: {
         responsables: { select: { usuario: { select: { id: true, nombre: true, rol: true } } } },
@@ -78,28 +88,62 @@ export const entregarTarea = safeAsync(async (req: Request, res: Response) => {
     });
   });
 
-  // 6. Notificar al Asignador (Jefe)
-  if (tarea.asignadorId) {
+  // 6. Notificaciones
+  if (esAutoAprobacion) {
+    const idsResponsables = tarea.responsables
+      .map((r) => r.usuarioId)
+      .filter((id) => id !== user.id);
+    if (idsResponsables.length > 0) {
+      sendNotificationToUsers(
+        idsResponsables,
+        "✅ Tarea Concluida",
+        `La tarea "${tarea.tarea}" asignada por ${user.nombre} ha sido completada y concluida.`,
+        "/mis-tareas"
+      );
+    }
+  } else if (tarea.asignadorId) {
     sendNotificationToUsers(
-        [tarea.asignadorId], 
-        `Tarea Entregada 📩`, 
-        `${user.nombre} entregó evidencias: "${tarea.tarea}".`, 
-        `/admin`
+      [tarea.asignadorId], 
+      `Tarea Entregada 📩`, 
+      `${user.nombre} entregó evidencias: "${tarea.tarea}".`, 
+      `/admin`
     );
   }
 
   // 7. Registro en Bitácora (Auditoría)
-  await registrarBitacora(
-    "CAMBIO_ESTATUS",
-    `${user.nombre} marcó como ENTREGADA la tarea "${tarea.tarea}". Esperando revisión.`,
-    user.id,
-    { 
-        tareaId, 
-        departamento: tarea.departamento.nombre,
-        evidencias: imagenesData.length, 
-        comentario 
-    }
-  );
+  if (esAutoAprobacion) {
+    await registrarBitacora(
+      "ACTUALIZAR_TAREA",
+      `${user.nombre} completó y CONCLUYÓ su propia tarea "${tarea.tarea}".`,
+      user.id,
+      { 
+          tareaId, 
+          departamento: tarea.departamento.nombre,
+          evidencias: imagenesData.length, 
+          comentario,
+          accion: "AUTO_APROBACION",
+          estatusNuevo: "CONCLUIDA"
+      }
+    );
+  } else {
+    await registrarBitacora(
+      "CAMBIO_ESTATUS",
+      `${user.nombre} marcó como ENTREGADA la tarea "${tarea.tarea}". Esperando revisión.`,
+      user.id,
+      { 
+          tareaId, 
+          departamento: tarea.departamento.nombre,
+          evidencias: imagenesData.length, 
+          comentario 
+      }
+    );
+  }
 
-  res.json({ message: "Enviada a revisión", tarea: tareaActualizada });
+  res.json({ 
+    message: esAutoAprobacion ? "Tarea concluida directamente" : "Enviada a revisión", 
+    tarea: {
+      ...tareaActualizada,
+      responsables: tareaActualizada.responsables.map((r) => r.usuario)
+    }
+  });
 });
