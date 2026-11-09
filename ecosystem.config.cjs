@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "calidad-api",
+      name: "tareas-api",
       // Ruta absoluta al ejecutable real de Bun en el servidor
       script: "C:\\Users\\joel.rodriguez\\.bun\\bin\\bun.exe",
       // Argumentos para que Bun ejecute el servidor del backend
