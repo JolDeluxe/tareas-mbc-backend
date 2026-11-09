@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "calidad-api",
       // Ruta absoluta al ejecutable real de Bun en el servidor
-      script: "C:\\Users\\CUADRA\\AppData\\Roaming\\npm\\node_modules\\bun\\bin\\bun.exe",
+      script: "C:\\Users\\joel.rodriguez\\.bun\\bin\\bun.exe",
       // Argumentos para que Bun ejecute el servidor del backend
       args: "run src/server.ts",
       // Decimos a PM2 que use directamente el ejecutable configurado arriba
